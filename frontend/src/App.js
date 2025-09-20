@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from './components/ui/label';
 import { Progress } from './components/ui/progress';
 import { toast } from 'sonner';
+import { Toaster } from './components/ui/sonner';
 import { Music, Upload, Zap, Mic2, Download, Plus, Trash2, Play, Pause, Volume2 } from 'lucide-react';
 import './App.css';
 
