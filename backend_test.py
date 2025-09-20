@@ -383,6 +383,12 @@ class MusicAppAPITester:
         # Test file download
         self.test_file_download()
         
+        # Test NEW EXPORT FUNCTIONALITY
+        print("\n🎯 Testing NEW Export Features...")
+        self.test_export_functionality()
+        self.test_download_lyrics_functionality()
+        self.test_export_with_incomplete_project()
+        
         # Print results
         print("\n" + "=" * 50)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
