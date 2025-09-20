@@ -337,6 +337,56 @@ const StudioPage = () => {
     }
   };
 
+  const exportProject = async () => {
+    setIsExporting(true);
+    
+    try {
+      // Get export info
+      const exportResponse = await axios.get(`${API}/projects/${projectId}/export`);
+      const exportData = exportResponse.data;
+      
+      if (!exportData.ready_for_export) {
+        toast.error('Project not ready for export. Please upload and transform a beat, then generate lyrics.');
+        return;
+      }
+      
+      // Download audio file if available
+      if (exportData.audio_file) {
+        const audioLink = document.createElement('a');
+        audioLink.href = `${API}/files/${exportData.audio_file}`;
+        audioLink.download = `${exportData.project_name}_beat.mp3`;
+        document.body.appendChild(audioLink);
+        audioLink.click();
+        document.body.removeChild(audioLink);
+      }
+      
+      // Download lyrics file
+      if (exportData.has_lyrics) {
+        const lyricsResponse = await axios.get(`${API}/projects/${projectId}/download-lyrics`, {
+          responseType: 'blob'
+        });
+        
+        const lyricsBlob = new Blob([lyricsResponse.data], { type: 'text/plain' });
+        const lyricsUrl = window.URL.createObjectURL(lyricsBlob);
+        const lyricsLink = document.createElement('a');
+        lyricsLink.href = lyricsUrl;
+        lyricsLink.download = `${exportData.project_name}_lyrics.txt`;
+        document.body.appendChild(lyricsLink);
+        lyricsLink.click();
+        document.body.removeChild(lyricsLink);
+        window.URL.revokeObjectURL(lyricsUrl);
+      }
+      
+      toast.success('Project exported successfully! Check your downloads folder.');
+      
+    } catch (error) {
+      console.error('Error exporting project:', error);
+      toast.error('Failed to export project');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
