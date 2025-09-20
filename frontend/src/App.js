@@ -620,9 +620,42 @@ const StudioPage = () => {
                         <Badge className="bg-purple-500/20 text-purple-300">
                           Style: {project.style}
                         </Badge>
-                        <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                          Copy Lyrics
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="border-white/20 text-white hover:bg-white/10"
+                            onClick={() => navigator.clipboard.writeText(project.lyrics)}
+                          >
+                            Copy Lyrics
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={async () => {
+                              try {
+                                const response = await axios.get(`${API}/projects/${projectId}/download-lyrics`, {
+                                  responseType: 'blob'
+                                });
+                                const blob = new Blob([response.data], { type: 'text/plain' });
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${project.name}_lyrics.txt`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                                toast.success('Lyrics downloaded!');
+                              } catch (error) {
+                                toast.error('Failed to download lyrics');
+                              }
+                            }}
+                          >
+                            <Download className="mr-1 h-3 w-3" />
+                            Download
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ) : (
