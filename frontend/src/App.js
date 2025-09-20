@@ -406,12 +406,18 @@ const StudioPage = () => {
           <div>
             <Link to="/" className="text-purple-400 hover:text-purple-300 mb-2 inline-block">← Back to Home</Link>
             <h1 className="text-3xl font-bold text-white">{project?.name}</h1>
+            {(!project?.transformed_file || !project?.lyrics) && (
+              <p className="text-gray-400 text-sm mt-1">
+                Complete the workflow to enable export: Upload → Transform → Generate Lyrics
+              </p>
+            )}
           </div>
           <div className="flex gap-4">
             <Button 
               onClick={exportProject}
               disabled={isExporting || !project?.transformed_file || !project?.lyrics}
               className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50"
+              title={(!project?.transformed_file || !project?.lyrics) ? "Complete the workflow to enable export" : "Export audio and lyrics"}
             >
               {isExporting ? (
                 <>
