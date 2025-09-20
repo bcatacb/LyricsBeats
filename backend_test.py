@@ -231,6 +231,123 @@ class MusicAppAPITester:
             404
         )
 
+    def test_export_functionality(self):
+        """Test the new export functionality"""
+        if not self.project_id:
+            print("❌ No project ID available for export testing")
+            return False
+
+        print("\n🎯 Testing Export Functionality...")
+        
+        # Test export endpoint
+        success, export_response = self.run_test(
+            "Export Project Info",
+            "GET",
+            f"projects/{self.project_id}/export",
+            200
+        )
+        
+        if success:
+            print(f"   Export Data: {json.dumps(export_response, indent=2)}")
+            
+            # Verify export data structure
+            required_fields = ['project_name', 'has_audio', 'has_lyrics', 'ready_for_export']
+            missing_fields = [field for field in required_fields if field not in export_response]
+            
+            if missing_fields:
+                print(f"❌ Missing required fields in export response: {missing_fields}")
+                return False
+            
+            print(f"   Ready for export: {export_response.get('ready_for_export', False)}")
+            print(f"   Has audio: {export_response.get('has_audio', False)}")
+            print(f"   Has lyrics: {export_response.get('has_lyrics', False)}")
+        
+        return success
+
+    def test_download_lyrics_functionality(self):
+        """Test the lyrics download functionality"""
+        if not self.project_id:
+            print("❌ No project ID available for lyrics download testing")
+            return False
+
+        print("\n📝 Testing Lyrics Download...")
+        
+        # Test lyrics download endpoint
+        url = f"{self.base_url}/projects/{self.project_id}/download-lyrics"
+        print(f"🔍 Testing Download Lyrics Endpoint...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url)
+            self.tests_run += 1
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                print(f"   Content-Type: {response.headers.get('content-type', 'Not specified')}")
+                print(f"   Content-Disposition: {response.headers.get('content-disposition', 'Not specified')}")
+                print(f"   Content Length: {len(response.content)} bytes")
+                
+                # Check if it's a text file
+                if 'text' in response.headers.get('content-type', ''):
+                    content_preview = response.text[:200] + "..." if len(response.text) > 200 else response.text
+                    print(f"   Content Preview: {content_preview}")
+                
+                return True
+            elif response.status_code == 404:
+                print(f"⚠️  Expected behavior - No lyrics available yet (Status: {response.status_code})")
+                return True  # This is expected if no lyrics were generated
+            else:
+                print(f"❌ Failed - Expected 200 or 404, got {response.status_code}")
+                try:
+                    print(f"   Response: {response.json()}")
+                except:
+                    print(f"   Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False
+
+    def test_export_with_incomplete_project(self):
+        """Test export functionality with incomplete project"""
+        print("\n🔍 Testing Export with Incomplete Project...")
+        
+        # Create a new project without completing the workflow
+        incomplete_project_name = f"Incomplete_Export_Test_{datetime.now().strftime('%H%M%S')}"
+        success, response = self.run_test(
+            "Create Incomplete Project for Export Test",
+            "POST",
+            "projects",
+            200,
+            data={"name": incomplete_project_name}
+        )
+        
+        if not success or 'id' not in response:
+            return False
+            
+        incomplete_project_id = response['id']
+        
+        # Test export endpoint with incomplete project
+        success, export_response = self.run_test(
+            "Export Incomplete Project",
+            "GET",
+            f"projects/{incomplete_project_id}/export",
+            200
+        )
+        
+        if success:
+            print(f"   Incomplete Project Export Data: {json.dumps(export_response, indent=2)}")
+            ready_for_export = export_response.get('ready_for_export', True)  # Should be False
+            if not ready_for_export:
+                print("✅ Correctly identified incomplete project as not ready for export")
+                return True
+            else:
+                print("❌ Incomplete project incorrectly marked as ready for export")
+                return False
+        
+        return False
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🎵 Starting Music Production App API Tests")
