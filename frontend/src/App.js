@@ -408,9 +408,22 @@ const StudioPage = () => {
             <h1 className="text-3xl font-bold text-white">{project?.name}</h1>
           </div>
           <div className="flex gap-4">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-              <Download className="mr-2 h-4 w-4" />
-              Export
+            <Button 
+              onClick={exportProject}
+              disabled={isExporting || !project?.transformed_file || !project?.lyrics}
+              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50"
+            >
+              {isExporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Project
+                </>
+              )}
             </Button>
           </div>
         </div>
