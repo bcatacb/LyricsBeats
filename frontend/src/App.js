@@ -232,6 +232,7 @@ const StudioPage = () => {
   const [customPrompt, setCustomPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchProject();
