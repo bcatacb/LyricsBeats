@@ -726,6 +726,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/studio/:projectId" element={<StudioPage />} />
         </Routes>
+        <Toaster position="top-right" />
       </BrowserRouter>
     </div>
   );
