@@ -504,7 +504,7 @@ const StudioPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-gray-300 text-sm">
-                    Transform your uploaded instrumental into an original beat using AI processing.
+                    Transform your uploaded instrumental into an original, copyrightable beat using AI audio processing. This creates a legally distinct composition.
                   </p>
                   
                   {project?.transformed_file ? (
