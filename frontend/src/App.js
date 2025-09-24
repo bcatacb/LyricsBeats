@@ -578,7 +578,7 @@ const StudioPage = () => {
                       ) : (
                         <>
                           <Zap className="mr-2 h-4 w-4" />
-                          Transform Into Original Beat
+                          Create Original MIDI Stems
                         </>
                       )}
                     </Button>
