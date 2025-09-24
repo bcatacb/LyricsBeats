@@ -12,6 +12,11 @@ import uuid
 from datetime import datetime, timezone
 import shutil
 import asyncio
+import numpy as np
+import librosa
+import soundfile as sf
+from scipy import signal
+import random
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
