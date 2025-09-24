@@ -545,7 +545,6 @@ const StudioPage = () => {
                     </div>
                   )}
                   
-                  {project?.transformed_file ? (
                   {(project?.transformed_file || project?.transformation_type === 'advanced_stems_midi') ? (
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                       <div className="flex items-center justify-between">
