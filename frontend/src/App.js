@@ -512,10 +512,13 @@ const StudioPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <Zap className="h-5 w-5 text-blue-400 mr-2" />
-                          <span className="text-white">Beat transformed</span>
+                          <span className="text-white">Original beat created</span>
                         </div>
-                        <Badge className="bg-blue-500/20 text-blue-300">Complete</Badge>
+                        <Badge className="bg-blue-500/20 text-blue-300">Ready for Copyright</Badge>
                       </div>
+                      <p className="text-gray-300 text-xs mt-2">
+                        Your beat has been transformed with pitch shifts, tempo changes, EQ filtering, and effects to create an original, copyrightable composition.
+                      </p>
                     </div>
                   ) : (
                     <Button 
