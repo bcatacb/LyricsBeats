@@ -152,15 +152,16 @@ def apply_audio_transformations(audio_path, output_path):
 def apply_eq_filter(audio, sr):
     """Apply EQ filtering to change the frequency response"""
     # Create different frequency bands and modify them
-    # Low-pass filter to reduce high frequencies slightly
-    nyquist = sr // 2
+    nyquist = sr / 2
     
-    # Apply a gentle low-pass filter at 16kHz
-    b, a = signal.butter(2, 16000/nyquist, btype='low')
+    # Apply a gentle low-pass filter at 80% of nyquist frequency
+    low_freq = min(16000, nyquist * 0.8)  # Ensure it's within valid range
+    b, a = signal.butter(2, low_freq/nyquist, btype='low')
     filtered = signal.filtfilt(b, a, audio)
     
-    # Apply a gentle high-pass filter at 40Hz to clean up low end
-    b, a = signal.butter(2, 40/nyquist, btype='high')
+    # Apply a gentle high-pass filter at a low frequency
+    high_freq = max(40, nyquist * 0.001)  # Ensure it's within valid range
+    b, a = signal.butter(2, high_freq/nyquist, btype='high')
     filtered = signal.filtfilt(b, a, filtered)
     
     return filtered
