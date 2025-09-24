@@ -89,6 +89,132 @@ def get_llm_chat():
         system_message="You are a professional rap lyricist and songwriter. You create original, creative rap lyrics in various styles. You understand different rap genres like trap, boom bap, drill, conscious rap, and more. You can adapt to different flows, rhyme schemes, and themes."
     ).with_model("openai", "gpt-4o")
 
+# Audio Transformation Functions
+def apply_audio_transformations(audio_path, output_path):
+    """
+    Apply multiple audio transformations to create an original beat from the instrumental.
+    This creates a legally distinct, copyrightable version.
+    """
+    try:
+        # Load the audio file
+        y, sr = librosa.load(audio_path, sr=None)
+        logger.info(f"Loaded audio: length={len(y)/sr:.2f}s, sr={sr}")
+        
+        # Create a copy for transformation
+        transformed = y.copy()
+        
+        # 1. Pitch shifting - randomly shift up or down 1-3 semitones
+        pitch_shift = random.choice([-3, -2, -1, 1, 2, 3])
+        transformed = librosa.effects.pitch_shift(transformed, sr=sr, n_steps=pitch_shift)
+        logger.info(f"Applied pitch shift: {pitch_shift} semitones")
+        
+        # 2. Tempo change - slightly speed up or slow down (90-110% of original)
+        tempo_factor = random.uniform(0.9, 1.1)
+        transformed = librosa.effects.time_stretch(transformed, rate=tempo_factor)
+        logger.info(f"Applied tempo change: {tempo_factor:.2f}x")
+        
+        # 3. Add harmonic filtering to change the character
+        # Apply a different EQ curve
+        filtered = apply_eq_filter(transformed, sr)
+        transformed = filtered
+        logger.info("Applied EQ filtering")
+        
+        # 4. Add subtle reverb/echo effect
+        transformed = add_reverb_effect(transformed, sr)
+        logger.info("Applied reverb effect")
+        
+        # 5. Dynamic range compression
+        transformed = apply_compression(transformed)
+        logger.info("Applied compression")
+        
+        # 6. Add subtle distortion for character
+        transformed = add_subtle_distortion(transformed)
+        logger.info("Applied subtle distortion")
+        
+        # 7. Stereo widening (if stereo) or create stereo from mono
+        if len(transformed.shape) == 1:  # Mono to stereo
+            transformed = create_stereo_from_mono(transformed)
+            logger.info("Created stereo from mono")
+        
+        # Normalize the output to prevent clipping
+        transformed = librosa.util.normalize(transformed)
+        
+        # Save the transformed audio
+        sf.write(output_path, transformed, sr)
+        logger.info(f"Saved transformed audio to: {output_path}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error in audio transformation: {str(e)}")
+        return False
+
+def apply_eq_filter(audio, sr):
+    """Apply EQ filtering to change the frequency response"""
+    # Create different frequency bands and modify them
+    # Low-pass filter to reduce high frequencies slightly
+    nyquist = sr // 2
+    
+    # Apply a gentle low-pass filter at 16kHz
+    b, a = signal.butter(2, 16000/nyquist, btype='low')
+    filtered = signal.filtfilt(b, a, audio)
+    
+    # Apply a gentle high-pass filter at 40Hz to clean up low end
+    b, a = signal.butter(2, 40/nyquist, btype='high')
+    filtered = signal.filtfilt(b, a, filtered)
+    
+    return filtered
+
+def add_reverb_effect(audio, sr):
+    """Add a subtle reverb effect using convolution"""
+    # Create a simple impulse response for reverb
+    reverb_length = int(0.1 * sr)  # 100ms reverb
+    impulse = np.exp(-np.linspace(0, 3, reverb_length)) * np.random.normal(0, 0.1, reverb_length)
+    
+    # Convolve with the audio (keep it subtle)
+    reverb_audio = np.convolve(audio, impulse, mode='same')
+    
+    # Mix original with reverb (90% original, 10% reverb)
+    return 0.9 * audio + 0.1 * reverb_audio
+
+def apply_compression(audio):
+    """Apply dynamic range compression"""
+    # Simple compression using numpy
+    threshold = 0.8
+    ratio = 4.0
+    
+    compressed = audio.copy()
+    over_threshold = np.abs(compressed) > threshold
+    
+    # Apply compression to signals above threshold
+    compressed[over_threshold] = np.sign(compressed[over_threshold]) * (
+        threshold + (np.abs(compressed[over_threshold]) - threshold) / ratio
+    )
+    
+    return compressed
+
+def add_subtle_distortion(audio):
+    """Add very subtle harmonic distortion"""
+    # Add gentle saturation/distortion
+    drive = 1.2
+    distorted = np.tanh(audio * drive) / drive
+    
+    # Mix with original (95% original, 5% distorted)
+    return 0.95 * audio + 0.05 * distorted
+
+def create_stereo_from_mono(mono_audio):
+    """Create stereo version from mono with slight delays and panning"""
+    # Create stereo by adding slight delays and filtering differences
+    left = mono_audio
+    
+    # Delay right channel by 1-3 samples for width
+    delay_samples = random.randint(1, 3)
+    right = np.pad(mono_audio, (delay_samples, 0), mode='constant')[:-delay_samples]
+    
+    # Stack to create stereo
+    stereo = np.stack([left, right], axis=1)
+    return stereo
+
 # Routes
 @api_router.get("/")
 async def root():
