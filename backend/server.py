@@ -547,7 +547,7 @@ async def upload_file(project_id: str, file: UploadFile = File(...)):
     
     return {"message": "File uploaded successfully", "filename": filename}
 
-# Beat Transformation (Real Audio Processing)
+# Beat Transformation (Advanced Audio-to-MIDI Conversion)
 @api_router.post("/projects/{project_id}/transform")
 async def transform_beat(project_id: str):
     project = await db.projects.find_one({"id": project_id})
@@ -561,37 +561,94 @@ async def transform_beat(project_id: str):
     if not original_path.exists():
         raise HTTPException(status_code=404, detail="Original file not found")
     
-    # Create transformed filename
-    file_extension = Path(project['original_file']).suffix
-    transformed_filename = f"{project_id}_transformed{file_extension}"
-    transformed_path = UPLOAD_DIR / transformed_filename
-    
     try:
-        logger.info(f"Starting audio transformation for project {project_id}")
+        logger.info(f"Starting advanced audio-to-MIDI transformation for project {project_id}")
         
-        # Apply real audio transformations to create an original beat
-        success = apply_audio_transformations(str(original_path), str(transformed_path))
+        # Create transformation output directory
+        transform_dir = UPLOAD_DIR / f"{project_id}_stems"
+        transform_dir.mkdir(exist_ok=True)
         
-        if not success:
-            raise HTTPException(status_code=500, detail="Audio transformation failed")
+        # Apply advanced audio-to-MIDI conversion
+        transformation_result = extract_stems_and_convert_to_midi(str(original_path), str(transform_dir))
         
-        # Update project
+        if not transformation_result.get("success"):
+            raise HTTPException(status_code=500, detail=f"Audio transformation failed: {transformation_result.get('error', 'Unknown error')}")
+        
+        # Also create a transformed audio version (combining both approaches)
+        file_extension = Path(project['original_file']).suffix
+        transformed_filename = f"{project_id}_transformed{file_extension}"
+        transformed_path = UPLOAD_DIR / transformed_filename
+        
+        # Apply audio effects transformation too
+        audio_success = apply_audio_transformations(str(original_path), str(transformed_path))
+        
+        # Update project with transformation results
         await db.projects.update_one(
             {"id": project_id},
             {
                 "$set": {
-                    "transformed_file": transformed_filename,
+                    "transformed_file": transformed_filename if audio_success else None,
+                    "stems_directory": f"{project_id}_stems",
+                    "midi_files": transformation_result.get("stem_midis", []),
+                    "musicxml_files": transformation_result.get("musicxml_files", []),
+                    "main_midi": transformation_result.get("main_midi"),
+                    "transformation_type": "advanced_stems_midi",
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
             }
         )
         
-        logger.info(f"Audio transformation completed for project {project_id}")
-        return {"message": "Beat transformed successfully into original composition", "filename": transformed_filename}
+        logger.info(f"Advanced transformation completed for project {project_id}")
+        return {
+            "message": "Beat transformed into MIDI stems and MusicXML - ready for complete re-orchestration",
+            "transformation_type": "stems_and_midi",
+            "midi_files": transformation_result.get("stem_midis", []),
+            "musicxml_files": transformation_result.get("musicxml_files", []),
+            "stems_available": True,
+            "original_composition_created": True
+        }
         
     except Exception as e:
-        logger.error(f"Error transforming beat for project {project_id}: {str(e)}")
+        logger.error(f"Error in advanced transformation for project {project_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to transform beat: {str(e)}")
+
+# New endpoint to download transformation package
+@api_router.get("/projects/{project_id}/download-stems")
+async def download_stems_package(project_id: str):
+    """Download complete MIDI/MusicXML package as ZIP"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if not project.get('stems_directory'):
+        raise HTTPException(status_code=404, detail="No stems available. Please transform the beat first.")
+    
+    stems_dir = UPLOAD_DIR / project['stems_directory']
+    if not stems_dir.exists():
+        raise HTTPException(status_code=404, detail="Stems directory not found")
+    
+    # Create ZIP file
+    import zipfile
+    zip_filename = f"{project['name']}_stems_package.zip"
+    zip_path = UPLOAD_DIR / zip_filename
+    
+    try:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Add all files from stems directory
+            for file_path in stems_dir.glob("*"):
+                if file_path.is_file():
+                    zipf.write(file_path, file_path.name)
+        
+        return FileResponse(
+            zip_path,
+            filename=zip_filename,
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating stems package: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create stems package")
 
 # Lyrics Generation
 @api_router.post("/projects/{project_id}/generate-lyrics", response_model=LyricsResponse)
