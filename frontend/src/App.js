@@ -546,16 +546,22 @@ const StudioPage = () => {
                   )}
                   
                   {project?.transformed_file ? (
+                  {project?.transformed_file || project?.transformation_type === 'advanced_stems_midi' ? (
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <Zap className="h-5 w-5 text-blue-400 mr-2" />
-                          <span className="text-white">Original beat created</span>
+                          <span className="text-white">
+                            {project?.transformation_type === 'advanced_stems_midi' ? 'Advanced Transformation Complete' : 'Original beat created'}
+                          </span>
                         </div>
-                        <Badge className="bg-blue-500/20 text-blue-300">Ready for Copyright</Badge>
+                        <Badge className="bg-blue-500/20 text-blue-300">Ready for DAW</Badge>
                       </div>
                       <p className="text-gray-300 text-xs mt-2">
-                        Your beat has been transformed with pitch shifts, tempo changes, EQ filtering, and effects to create an original, copyrightable composition.
+                        {project?.transformation_type === 'advanced_stems_midi' 
+                          ? 'Your instrumental has been converted to MIDI stems and MusicXML. Import into your DAW and assign different instruments for completely original compositions.'
+                          : 'Your beat has been transformed with pitch shifts, tempo changes, EQ filtering, and effects to create an original, copyrightable composition.'
+                        }
                       </p>
                     </div>
                   ) : (
