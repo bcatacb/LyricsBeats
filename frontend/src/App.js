@@ -504,8 +504,46 @@ const StudioPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-gray-300 text-sm">
-                    Transform your uploaded instrumental into an original, copyrightable beat using AI audio processing. This creates a legally distinct composition.
+                    Advanced transformation: Extracts musical stems, converts to MIDI & MusicXML. This creates completely original, re-orchestratable compositions ready for your DAW.
                   </p>
+                  
+                  {project?.transformation_type === 'advanced_stems_midi' && (
+                    <div className="mt-4 p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg">
+                      <h4 className="text-green-400 font-semibold text-sm mb-2">✨ Advanced Transformation Complete!</h4>
+                      <div className="space-y-1 text-xs text-gray-300">
+                        <p>• Audio converted to MIDI stems (bass, melody, harmony, percussion)</p>
+                        <p>• MusicXML notation files created</p>
+                        <p>• Import MIDI files into any DAW with different instruments</p>
+                        <p>• Completely transformative - original copyrightable compositions</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="mt-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-xs"
+                        onClick={async () => {
+                          try {
+                            const response = await axios.get(`${API}/projects/${projectId}/download-stems`, {
+                              responseType: 'blob'
+                            });
+                            const blob = new Blob([response.data], { type: 'application/zip' });
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${project.name}_stems_package.zip`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                            toast.success('MIDI/MusicXML package downloaded!');
+                          } catch (error) {
+                            toast.error('Failed to download stems package');
+                          }
+                        }}
+                      >
+                        <Download className="mr-1 h-3 w-3" />
+                        Download MIDI Package
+                      </Button>
+                    </div>
+                  )}
                   
                   {project?.transformed_file ? (
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
