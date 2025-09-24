@@ -299,7 +299,7 @@ async def upload_file(project_id: str, file: UploadFile = File(...)):
     
     return {"message": "File uploaded successfully", "filename": filename}
 
-# Beat Transformation (Simulated for MVP)
+# Beat Transformation (Real Audio Processing)
 @api_router.post("/projects/{project_id}/transform")
 async def transform_beat(project_id: str):
     project = await db.projects.find_one({"id": project_id})
@@ -309,32 +309,41 @@ async def transform_beat(project_id: str):
     if not project.get('original_file'):
         raise HTTPException(status_code=400, detail="No original file found. Please upload a file first.")
     
-    # Simulate processing time
-    await asyncio.sleep(2)
-    
-    # For MVP, just copy the original file with a new name (simulating transformation)
     original_path = UPLOAD_DIR / project['original_file']
     if not original_path.exists():
         raise HTTPException(status_code=404, detail="Original file not found")
     
+    # Create transformed filename
     file_extension = Path(project['original_file']).suffix
     transformed_filename = f"{project_id}_transformed{file_extension}"
     transformed_path = UPLOAD_DIR / transformed_filename
     
-    shutil.copy2(original_path, transformed_path)
-    
-    # Update project
-    await db.projects.update_one(
-        {"id": project_id},
-        {
-            "$set": {
-                "transformed_file": transformed_filename,
-                "updated_at": datetime.now(timezone.utc).isoformat()
+    try:
+        logger.info(f"Starting audio transformation for project {project_id}")
+        
+        # Apply real audio transformations to create an original beat
+        success = apply_audio_transformations(str(original_path), str(transformed_path))
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Audio transformation failed")
+        
+        # Update project
+        await db.projects.update_one(
+            {"id": project_id},
+            {
+                "$set": {
+                    "transformed_file": transformed_filename,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
             }
-        }
-    )
-    
-    return {"message": "Beat transformed successfully", "filename": transformed_filename}
+        )
+        
+        logger.info(f"Audio transformation completed for project {project_id}")
+        return {"message": "Beat transformed successfully into original composition", "filename": transformed_filename}
+        
+    except Exception as e:
+        logger.error(f"Error transforming beat for project {project_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to transform beat: {str(e)}")
 
 # Lyrics Generation
 @api_router.post("/projects/{project_id}/generate-lyrics", response_model=LyricsResponse)
