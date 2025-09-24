@@ -19,6 +19,14 @@ from scipy import signal
 import random
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+# Advanced Music Processing
+import music21
+import pretty_midi
+import mido
+import basic_pitch
+from basic_pitch.inference import predict
+import tempfile
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
