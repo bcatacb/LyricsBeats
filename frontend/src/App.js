@@ -560,22 +560,18 @@ const StudioPage = () => {
                     </div>
                   )}
                   
-                  {(project?.transformed_file || project?.transformation_type === 'advanced_stems_midi') ? (
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
+                  {project?.transformation_type === 'advanced_stems_midi' ? (
+                    <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
-                          <Zap className="h-5 w-5 text-blue-400 mr-2" />
-                          <span className="text-white">
-                            {project?.transformation_type === 'advanced_stems_midi' ? 'Advanced Transformation Complete' : 'Original beat created'}
-                          </span>
+                          <Zap className="h-5 w-5 text-green-400 mr-2" />
+                          <span className="text-white font-semibold">MIDI Transformation Complete</span>
                         </div>
-                        <Badge className="bg-blue-500/20 text-blue-300">Ready for DAW</Badge>
+                        <Badge className="bg-green-500/20 text-green-300">🎼 Ready for DAW</Badge>
                       </div>
-                      <p className="text-gray-300 text-xs mt-2">
-                        {project?.transformation_type === 'advanced_stems_midi' 
-                          ? 'Your instrumental has been converted to MIDI stems and MusicXML. Import into your DAW and assign different instruments for completely original compositions.'
-                          : 'Your beat has been transformed with pitch shifts, tempo changes, EQ filtering, and effects to create an original, copyrightable composition.'
-                        }
+                      <p className="text-gray-300 text-xs">
+                        Your instrumental has been converted to {project.midi_files?.length || 0} MIDI stem files and {project.musicxml_files?.length || 0} MusicXML notation files. 
+                        Import into your DAW and assign different instruments for completely original compositions.
                       </p>
                     </div>
                   ) : (
@@ -587,12 +583,12 @@ const StudioPage = () => {
                       {isTransforming ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Transforming...
+                          Converting to MIDI...
                         </>
                       ) : (
                         <>
                           <Zap className="mr-2 h-4 w-4" />
-                          Create Original MIDI Stems
+                          Convert to MIDI Stems
                         </>
                       )}
                     </Button>
