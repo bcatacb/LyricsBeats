@@ -488,6 +488,7 @@ class MusicAppAPITester:
         # Test NEW EXPORT FUNCTIONALITY
         print("\n🎯 Testing NEW Export Features...")
         self.test_export_functionality()
+        self.test_download_stems_package()
         self.test_download_lyrics_functionality()
         self.test_export_with_incomplete_project()
         
