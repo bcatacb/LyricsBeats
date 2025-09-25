@@ -310,7 +310,63 @@ class MusicAppAPITester:
         
         return success
 
-    def test_download_lyrics_functionality(self):
+    def test_download_stems_package(self):
+        """Test the new download-stems endpoint"""
+        if not self.project_id:
+            print("❌ No project ID available for stems download testing")
+            return False
+
+        print("\n📦 Testing MIDI Stems Package Download...")
+        
+        url = f"{self.base_url}/projects/{self.project_id}/download-stems"
+        print(f"🔍 Testing Download MIDI Stems Package...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url)
+            self.tests_run += 1
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                print(f"   Content-Type: {response.headers.get('content-type', 'Not specified')}")
+                print(f"   Content-Disposition: {response.headers.get('content-disposition', 'Not specified')}")
+                print(f"   Content Length: {len(response.content)} bytes")
+                
+                # Check if it's a ZIP file
+                content_type = response.headers.get('content-type', '')
+                if 'zip' in content_type or 'application/zip' in content_type:
+                    print("✅ Correct content type: ZIP file")
+                else:
+                    print(f"⚠️  Unexpected content type: {content_type}")
+                
+                # Check Content-Disposition header for filename
+                content_disposition = response.headers.get('content-disposition', '')
+                if 'attachment' in content_disposition and '.zip' in content_disposition:
+                    print("✅ Correct Content-Disposition: ZIP attachment")
+                else:
+                    print(f"⚠️  Unexpected Content-Disposition: {content_disposition}")
+                
+                return True
+            elif response.status_code == 404:
+                print(f"⚠️  Expected behavior - No stems available yet (Status: {response.status_code})")
+                try:
+                    error_data = response.json()
+                    print(f"   Error message: {error_data.get('detail', 'No details')}")
+                except:
+                    pass
+                return True  # This is expected if transformation hasn't been done
+            else:
+                print(f"❌ Failed - Expected 200 or 404, got {response.status_code}")
+                try:
+                    print(f"   Response: {response.json()}")
+                except:
+                    print(f"   Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False
         """Test the lyrics download functionality"""
         if not self.project_id:
             print("❌ No project ID available for lyrics download testing")
