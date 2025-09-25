@@ -147,17 +147,63 @@ class MusicAppAPITester:
         return success
 
     def test_beat_transformation(self):
-        """Test beat transformation"""
+        """Test MIDI transformation (NEW FUNCTIONALITY)"""
         if not self.project_id:
             print("❌ No project ID available for transformation testing")
             return False
 
-        return self.run_test(
-            "Transform Beat",
+        print("\n🎼 Testing MIDI Transformation (Critical Update)...")
+        success, response = self.run_test(
+            "Transform Beat to MIDI Stems",
             "POST",
             f"projects/{self.project_id}/transform",
             200
         )
+        
+        if success:
+            print("🔍 Analyzing transformation response...")
+            
+            # Check for MIDI-specific response fields
+            expected_fields = [
+                'transformation_type', 'midi_files', 'musicxml_files', 
+                'stems_available', 'original_composition_created'
+            ]
+            
+            missing_fields = [field for field in expected_fields if field not in response]
+            if missing_fields:
+                print(f"❌ Missing MIDI transformation fields: {missing_fields}")
+                return False
+            
+            # Verify transformation type is MIDI-based
+            transformation_type = response.get('transformation_type')
+            if transformation_type != 'advanced_stems_midi':
+                print(f"❌ Wrong transformation type: {transformation_type} (expected: advanced_stems_midi)")
+                return False
+            
+            # Check MIDI files were created
+            midi_files = response.get('midi_files', [])
+            musicxml_files = response.get('musicxml_files', [])
+            
+            print(f"✅ Transformation type: {transformation_type}")
+            print(f"✅ MIDI files created: {len(midi_files)} files")
+            print(f"✅ MusicXML files created: {len(musicxml_files)} files")
+            print(f"✅ Stems available: {response.get('stems_available', False)}")
+            print(f"✅ Original composition created: {response.get('original_composition_created', False)}")
+            
+            if midi_files:
+                print(f"   MIDI files: {', '.join(midi_files)}")
+            if musicxml_files:
+                print(f"   MusicXML files: {', '.join(musicxml_files)}")
+            
+            # CRITICAL CHECK: Ensure NO MP3 file was created
+            if 'transformed_file' in response:
+                print(f"❌ CRITICAL ERROR: MP3 file still being created: {response['transformed_file']}")
+                print("   This should NOT happen - transformation should create MIDI only!")
+                return False
+            
+            print("✅ CRITICAL SUCCESS: No MP3 file created - MIDI transformation working correctly!")
+            
+        return success
 
     def test_lyrics_generation(self):
         """Test lyrics generation with different styles"""
