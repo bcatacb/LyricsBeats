@@ -406,18 +406,18 @@ const StudioPage = () => {
           <div>
             <Link to="/" className="text-purple-400 hover:text-purple-300 mb-2 inline-block">← Back to Home</Link>
             <h1 className="text-3xl font-bold text-white">{project?.name}</h1>
-            {(!project?.transformed_file || !project?.lyrics) && (
+            {(!project?.transformation_complete || !project?.lyrics) && (
               <p className="text-gray-400 text-sm mt-1">
-                Complete the workflow to enable export: Upload → Transform → Generate Lyrics
+                Complete the workflow to enable export: Upload → Transform to MIDI → Generate Lyrics
               </p>
             )}
           </div>
           <div className="flex gap-4">
             <Button 
               onClick={exportProject}
-              disabled={isExporting || !project?.transformed_file || !project?.lyrics}
+              disabled={isExporting || !project?.transformation_complete || !project?.lyrics}
               className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50"
-              title={(!project?.transformed_file || !project?.lyrics) ? "Complete the workflow to enable export" : "Export audio and lyrics"}
+              title={(!project?.transformation_complete || !project?.lyrics) ? "Complete the workflow to enable export" : "Export MIDI stems and lyrics"}
             >
               {isExporting ? (
                 <>
@@ -427,7 +427,7 @@ const StudioPage = () => {
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export Project
+                  Export MIDI Package
                 </>
               )}
             </Button>
