@@ -367,6 +367,8 @@ class MusicAppAPITester:
         except Exception as e:
             print(f"❌ Failed - Error: {str(e)}")
             return False
+
+    def test_download_lyrics_functionality(self):
         """Test the lyrics download functionality"""
         if not self.project_id:
             print("❌ No project ID available for lyrics download testing")
