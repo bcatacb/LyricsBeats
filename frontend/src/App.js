@@ -508,17 +508,32 @@ const StudioPage = () => {
                   </p>
                   
                   {project?.transformation_type === 'advanced_stems_midi' && (
-                    <div className="mt-4 p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg">
-                      <h4 className="text-green-400 font-semibold text-sm mb-2">✨ Advanced Transformation Complete!</h4>
-                      <div className="space-y-1 text-xs text-gray-300">
-                        <p>• Audio converted to MIDI stems (bass, melody, harmony, percussion)</p>
-                        <p>• MusicXML notation files created</p>
-                        <p>• Import MIDI files into any DAW with different instruments</p>
-                        <p>• Completely transformative - original copyrightable compositions</p>
+                    <div className="mt-4 p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg">
+                      <h4 className="text-green-400 font-semibold text-sm mb-3">✨ MIDI Transformation Complete!</h4>
+                      <div className="space-y-2 text-xs text-gray-300 mb-4">
+                        <p>• <strong>Audio converted to MIDI stems:</strong> {project.midi_files?.length || 0} files</p>
+                        <p>• <strong>MusicXML notation created:</strong> {project.musicxml_files?.length || 0} files</p>
+                        <p>• <strong>Stems available:</strong> Bass, Melody, Harmony, Percussion, Kick</p>
+                        <p>• <strong>Ready for DAW import:</strong> Assign different instruments to each track</p>
+                        <p>• <strong>Completely transformative:</strong> Original copyrightable compositions</p>
                       </div>
+                      
+                      {project.midi_files && project.midi_files.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-xs text-gray-400 mb-1">MIDI Files Created:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {project.midi_files.map((file, index) => (
+                              <Badge key={index} className="bg-purple-500/20 text-purple-300 text-xs">
+                                {file}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       <Button
                         size="sm"
-                        className="mt-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-xs"
+                        className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-xs"
                         onClick={async () => {
                           try {
                             const response = await axios.get(`${API}/projects/${projectId}/download-stems`, {
@@ -528,19 +543,19 @@ const StudioPage = () => {
                             const url = window.URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = url;
-                            link.download = `${project.name}_stems_package.zip`;
+                            link.download = `${project.name}_MIDI_Package.zip`;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
                             window.URL.revokeObjectURL(url);
-                            toast.success('MIDI/MusicXML package downloaded!');
+                            toast.success('🎼 MIDI Package Downloaded! Import into your DAW.');
                           } catch (error) {
-                            toast.error('Failed to download stems package');
+                            toast.error('Failed to download MIDI package');
                           }
                         }}
                       >
                         <Download className="mr-1 h-3 w-3" />
-                        Download MIDI Package
+                        Download Complete MIDI Package
                       </Button>
                     </div>
                   )}
