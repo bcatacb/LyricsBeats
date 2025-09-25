@@ -569,30 +569,26 @@ async def transform_beat(project_id: str):
         transform_dir.mkdir(exist_ok=True)
         
         # Apply advanced audio-to-MIDI conversion
+        logger.info("Calling extract_stems_and_convert_to_midi...")
         transformation_result = extract_stems_and_convert_to_midi(str(original_path), str(transform_dir))
         
         if not transformation_result.get("success"):
+            logger.error(f"Transformation failed: {transformation_result.get('error', 'Unknown error')}")
             raise HTTPException(status_code=500, detail=f"Audio transformation failed: {transformation_result.get('error', 'Unknown error')}")
         
-        # Also create a transformed audio version (combining both approaches)
-        file_extension = Path(project['original_file']).suffix
-        transformed_filename = f"{project_id}_transformed{file_extension}"
-        transformed_path = UPLOAD_DIR / transformed_filename
+        logger.info(f"Transformation successful. Files created: {transformation_result.get('stem_midis', [])}")
         
-        # Apply audio effects transformation too
-        audio_success = apply_audio_transformations(str(original_path), str(transformed_path))
-        
-        # Update project with transformation results
+        # Update project with transformation results - REMOVE audio file creation
         await db.projects.update_one(
             {"id": project_id},
             {
                 "$set": {
-                    "transformed_file": transformed_filename if audio_success else None,
                     "stems_directory": f"{project_id}_stems",
                     "midi_files": transformation_result.get("stem_midis", []),
                     "musicxml_files": transformation_result.get("musicxml_files", []),
                     "main_midi": transformation_result.get("main_midi"),
                     "transformation_type": "advanced_stems_midi",
+                    "transformation_complete": True,
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
             }
@@ -600,16 +596,20 @@ async def transform_beat(project_id: str):
         
         logger.info(f"Advanced transformation completed for project {project_id}")
         return {
-            "message": "Beat transformed into MIDI stems and MusicXML - ready for complete re-orchestration",
-            "transformation_type": "stems_and_midi",
+            "message": "Beat successfully converted to MIDI stems and MusicXML files",
+            "transformation_type": "advanced_stems_midi",
             "midi_files": transformation_result.get("stem_midis", []),
             "musicxml_files": transformation_result.get("musicxml_files", []),
+            "main_midi": transformation_result.get("main_midi"),
             "stems_available": True,
-            "original_composition_created": True
+            "original_composition_created": True,
+            "files_created": len(transformation_result.get("stem_midis", [])) + len(transformation_result.get("musicxml_files", []))
         }
         
     except Exception as e:
         logger.error(f"Error in advanced transformation for project {project_id}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to transform beat: {str(e)}")
 
 # New endpoint to download transformation package
